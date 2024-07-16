@@ -117,8 +117,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     command_line::clear_terminal();
     println!("{}","Welcome to Git-Manager".white().bold().underline());
-    
-    git_actions::print_repo_list(&repo_path_list);
     command_line::print_infos();
 
     loop {
