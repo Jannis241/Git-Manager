@@ -1,8 +1,6 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
-use crate::io::stdout;
-use crate::State;
-use std::io::{self, Write, Read, Seek, prelude::*};
+use crate::*;
 
 pub fn new_lines(num_of_lines: usize) {
     println!("{}", "\n".repeat(num_of_lines));

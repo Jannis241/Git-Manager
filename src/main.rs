@@ -1,16 +1,12 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
-use std::fmt::{format, Debug};
-use std::io::{self, Write, Read, Seek, prelude::*};
-use colored::*;
-use crate::io::stdout;
-use std::{clone, fs};
-use std::fs::{File, OpenOptions};
+use std::io::{self, Write, Read, Seek}; 
+use std::fs::{self, File, OpenOptions}; 
 use std::path::{Path, PathBuf};
-use serde::{Serialize, Deserialize};
-use std::collections::HashMap;
-use reqwest::header;
 use std::process::Command;
+use colored::*; 
+use serde::{Serialize, Deserialize};
+use reqwest::header;
 
 mod command_line;
 mod git_actions;

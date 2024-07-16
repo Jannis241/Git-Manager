@@ -1,4 +1,3 @@
-use crate::{Config, Repository};
 use crate::*;
 
 pub fn create_repo(repoName: &String, public: &bool, path: &String, api_key: &String){
