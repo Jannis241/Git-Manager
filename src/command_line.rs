@@ -93,6 +93,7 @@ pub fn print_infos() {
     }
     println!("\n{}", "Extra info:".bold().underline().green());
     println!("{}", "To execute some commands, you need to have opened a repository.".italic().white());
+    println!("{}", "If you have a really large project directory some commands might take a while to execute.".italic().white());
     new_lines(1);
 }
 

@@ -102,11 +102,10 @@ fn check_name(name: &String, error_msg: &str) -> bool {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("Searching your project directory for git repositories, this may take a while...");
+
     let mut currentState = State::Home;
     let user_config = manage_config();
-
-    command_line::new_lines(1);
-    println!("{}","Welcome to Git-Manager".white().bold().underline());
 
     let repo_list = git_actions::get_all_repositories(&user_config);
     let mut repo_names_list = Vec::new();
@@ -115,6 +114,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         repo_names_list.push(repo.Name.clone());
         repo_path_list.push(repo.Path.clone());
     }
+
+    command_line::clear_terminal();
+    println!("{}","Welcome to Git-Manager".white().bold().underline());
     
     git_actions::print_repo_list(&repo_path_list);
     command_line::print_infos();

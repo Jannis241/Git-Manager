@@ -150,9 +150,6 @@ pub fn get_all_repositories(user_config: &Config) -> Vec<Repository>{
 }
 
 pub fn print_repo_list(repo_paths: &Vec<String>) {
-    command_line::new_lines(1);
-    println!("{}", "Your repositories:".green().bold().underline());
-
     for path in repo_paths.clone() {
         let cleanPathSplit = path.split_inclusive("/").collect::<Vec<&str>>();
         
