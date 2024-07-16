@@ -32,10 +32,6 @@ struct CloneData {
     clone_url: String
 }
 
-trait Help{
-    fn getHelp(&self);
-}
-
 fn new_lines(num_of_lines: usize) {
     println!("{}", "\n".repeat(num_of_lines));
 }
