@@ -72,3 +72,7 @@ Generell:
 - git add, commit funktionen adden
 - branch merge feature
 - switch branch feature
+
+
+upload all und update all test
+alle git funktionen richtige print statements einbauen und alle testen
