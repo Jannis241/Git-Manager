@@ -6,6 +6,9 @@ müssen könenn ja in ein neues file
 
 --------------------------------------------------
 
+migrate: 
+- gucken ob es schon ein git dir ist
+
 create_repo:
 - wo auf dem pc (path)
 - public oder private

@@ -2,11 +2,15 @@ use crate::{Config, Repository};
 use crate::*;
 
 pub fn create_repo(repoName: &String, public: &bool, path: &String, api_key: &String){
-    println!("the user wants to create a repo called: {}", repoName)
+    println!("the user wants to create a repo:");
+    println!("Name: {}", repoName);
+    println!("Path (wo das repo ist, Optional): {}", path);
+    println!("Public: {}", public);
+    println!("API-Key: {}", api_key);
 }
 
 pub fn create_branch(repoName: &String, branchName: &String, api_key: &String){
-    println!("the user wants to create a branch in {} with the name {}", repoName, branchName)
+    println!("the user wants to create a branch in {} with the name {} -> api key: {}", repoName, branchName, api_key);
 }
 
 pub fn upload(repoPath: &String, commitMessage: &String){
@@ -36,7 +40,11 @@ pub fn download(repo_name: &String, username: &String, path: &str) {
 }
 
 pub fn migrate(projectPath: String, repoName: String, public: bool, api_key: String){
-    println!("the user wants to migrate: {}", projectPath);
+    println!("the user wants to migrate a project:");
+    println!("repo name: {}", repoName);
+    println!("current project path: {}", projectPath);
+    println!("Public: {}", public);
+    println!("API-Key: {}", api_key);
 }
 
 pub fn find_git_repos(path: &Path) -> Vec<PathBuf> {
