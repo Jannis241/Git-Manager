@@ -135,10 +135,6 @@ fn write_to_json(file_path: &str, config: &Config) {
 
 
 pub fn create_repo(repoName: String){
-    // path auf dem pc
-    // public or private
-    // name
-    // ich glaube ein file muss schon drinne sein, einfach ein text file oder so
     println!("the user wants to create a repo called: {}", repoName)
 }
 
@@ -146,7 +142,7 @@ pub fn create_branch(repoName: String, branchName: String){
     println!("the user wants to create a branch in {} with the name {}", repoName, branchName)
 }
 
-pub fn upload(repoPath: &String){
+pub fn upload(repoPath: &String, commitMessage: &String){
     println!("the user wants to upload: {}", repoPath);
     
 }
@@ -327,19 +323,13 @@ fn extract_repo_name(clone_url: &str) -> &str {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     new_lines(1);
-    // getting user config
+
     let mut currentState = State::Home;
     let user_config = manage_config();
-
-    // getting all of the git project paths and names
-
 
     new_lines(1);
     println!("{}","Welcome to Git-Manager".white().bold().underline());
 
-
-
-    // print the found repos
     let project_path_str = user_config.project_path.as_str();
     let project_path = Path::new(project_path_str);
     let git_repos_paths = find_git_repos(project_path);
@@ -438,22 +428,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if arguments.len() > 0 {
             match arguments[0] {
-                
-                // vorschläge wenn man einen namen falsch schreibt
-
-                // auto correction
-                // pull-push combi 
-                // merge feature -> git add, git commit, git pull --rebase, git push
-                // --> generell auch die features einbauen die man braucht um zusammen zu arbeiten
-                // wenn ein project nicht gefunden wird soll eine warnung kommen dass dieses projekt im project folder sein muss
-                
                 "open" =>{
                     if arguments[1] == "config"{
                         currentState = State::Config;
-                        // reset
-                        // set username:
-                        // set api::
-                        // ....
+
                     }
 
                     else if check_name(&arguments[1].to_string(),"Empty file name is not valid"){                      
@@ -476,23 +454,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     new_lines(1);
                 }
 
-                // force abfrage falls es fehler gibt fehlt noch
                 "upload" => {
                     if arguments[1] == "all" {
                         for repo in &repo_list{
                             update(&repo.Path);
                         }
                     }
+
                     else {
                         // upload a specific file
                         if let State::Repo(ref reponame) = currentState{
-                            // hier muss der path sein und nicht der name
                             upload(&reponame.to_string());
                         }
                         else {
                             let name = rawArgs[1].to_string().clone();
                             if repoNames.contains(&name) {
-                            // hier muss der path sein und nicht der name
                                 upload(&name);
                             }
                             else {
@@ -505,12 +481,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
 
                 "download" => {
-
-                    // download from <github name> <reponame>
-                    // download all from <github name> <reponame>
-                    // vielleicht noch einen optionalen parameter "path" der bestimmt wohin das geklont werden soll (nicht pflicht)
                     if arguments[1] == "all" && arguments[2] == "from"{
-                        // irgendwie mit dem username alle sachen von dem acc downloaden oder so
                         let username = rawArgs[3];
                         
                         if username == &user_config.username {
@@ -534,10 +505,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
 
-                // force abfrage falls es fehler gibt fehlt noch
-                // wenn ein file nicht gefunden wird, vielleicht den input alles lowercase machen und gucken ob das zu dem repo namen
-                // in lowercase match, und falls das der fall ist den namen vorschlagen da es oft passiert dass nur die groß und klein schreibung falsch ist
-                // das selbe auch bei open, uppload usw machen
                 "update" => {
                     if arguments[1] == "all" {
                         for repo in &repo_list {
@@ -547,30 +514,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     else {
                         // update a specific file
                         if let State::Repo(ref reponame) = currentState{
-
-                            // hier muss der path sein und nicht der name
                             update(&reponame.to_string());
                         }
                         else {
                             let name = rawArgs[1].to_string().clone();
                             if repoNames.contains(&name) {
-                            // hier muss der path sein und nicht der name
                                 update(&name);
                             }
                             else {
                                 throw_error("File not found");
                             }
                         }
-
-                        
                     }
                 }
                 "delete" => {
-                    // folder
-                    // repo
-                    // branch 
-                    // man muss nohchmal bestätigen falls man etwas löschen will
-                    // error nachricht falls das repo nicht dir gehört (user config checken)
                 }
 
                 "create" => {
@@ -589,10 +546,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     else if arguments[1] == "repo" {
                         if check_name(&name, "Empty repository name is not valid"){
                             create_repo(name);
-                            // man muss daran denken hier werden alle repos zu bekommen oder zumindest den path 
-                            // einfach hinzufügen um zeit zu sparen
-
-                            // gucken ob es das repo schon gibt
 
                         }       
                     } 
