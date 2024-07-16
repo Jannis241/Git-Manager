@@ -185,8 +185,11 @@ fn print_in_file_infos() {
         ("upload", "Uploads this repository directly"),
         ("create branch <name>", "Creates a new branch"),
         ("update", "Get the newest version of this project directly"),
-        ("close", "Get back to the home state"),
-        ("exit, q", "Exit the Git-Manager"),
+        ("close / back", "Get back to the home state"),
+        ("delete repo", "Deletes the repository from your account"),
+        ("delete branch <name>", "Deletes the branch of the project you are currently in"),
+        ("delete file", "Deletes the file of the project you are currently in"),
+        ("exit / q", "Exit the Git-Manager"),
     ];
 
     let max_command_length = commands_info.iter()
@@ -217,6 +220,9 @@ fn print_infos() {
         ("upload all", "Upload all repositories"),
         ("create branch <branch name>", "Create a new branch (you have to open this repository first)"),
         ("create repo <repo name>", "Create a new repository"),
+        ("delete repo <name>", "Deletes the repository from your Github account"),
+        ("delete branch <name> in <repo name>" , "Deletes branch in repository"),
+        ("delete folder <name>", "Deletes the file from your system"),
         ("update <repo name>", "Get the newest version of a project"),
         ("download all from <github name>", "Download all repositories from your account"),
         ("download <repo name> from <github name>", "Download a repository from another user"),
@@ -437,7 +443,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 // auto correction
                 // pull-push combi 
-                // merge feature
+                // merge feature -> git add, git commit, git pull --rebase, git push
                 // --> generell auch die features einbauen die man braucht um zusammen zu arbeiten
                 // wenn ein project nicht gefunden wird soll eine warnung kommen dass dieses projekt im project folder sein muss
                 
@@ -502,6 +508,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                     // download from <github name> <reponame>
                     // download all from <github name> <reponame>
+                    // vielleicht noch einen optionalen parameter "path" der bestimmt wohin das geklont werden soll (nicht pflicht)
                     if arguments[1] == "all" && arguments[2] == "from"{
                         // irgendwie mit dem username alle sachen von dem acc downloaden oder so
                         let username = rawArgs[3];
@@ -557,6 +564,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                         
                     }
+                }
+                "delete" => {
+                    // folder
+                    // repo
+                    // branch 
+                    // man muss nohchmal bestätigen falls man etwas löschen will
+                    // error nachricht falls das repo nicht dir gehört (user config checken)
                 }
 
                 "create" => {
