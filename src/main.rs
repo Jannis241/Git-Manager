@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
+use std::collections::btree_map::Range;
 use std::io::{self, Write}; 
 use std::fs::{self, File, OpenOptions}; 
 use std::path::{Path, PathBuf};
@@ -39,6 +40,18 @@ struct Config {
     project_path: String,
 }
 
+fn avoid_index_error(args: &mut Vec<&str>){
+    args.push(" ");
+    args.push(" ");
+    args.push(" ");
+    args.push(" ");
+    args.push(" ");
+    args.push(" ");
+    args.push(" ");
+    args.push(" ");
+    args.push(" ");
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Searching your project directory for git repositories, this may take a while...");
@@ -63,23 +76,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         let input = command_line::get_git_input(&currentState);
         
-
         // arguements for the commands and rawArgs for names -> for uppercase and lowercase letters
         let mut arguements = input.0.split_whitespace().collect::<Vec<&str>>();
         let mut rawArgs = input.1.split_whitespace().collect::<Vec<&str>>();
         
         // push some empty strings so no index error can occur
-        arguements.push(" ");
-        arguements.push(" ");
-        arguements.push(" ");
-        arguements.push(" ");
-        arguements.push(" ");
-
-        rawArgs.push(" ");
-        rawArgs.push(" ");
-        rawArgs.push(" ");
-        rawArgs.push(" ");
-        rawArgs.push(" ");
+        avoid_index_error(&mut arguements);
+        avoid_index_error(&mut rawArgs);
 
         // command loop
         match arguements[0] {

@@ -45,8 +45,6 @@ Allgemein:
 - command infos richitg machen (auch auf states achten)
 - auto completion für befehle (tab)
 - auto completion für files (tab)
-- lösung finden sodass die git liste nicht immer geupdatet werden muss
-da das zu laggst führt bei großen projecten
 - so machen dass man nicht von überall alles machen kann (State)
 
 
