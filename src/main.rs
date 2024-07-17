@@ -2,7 +2,6 @@
 #![allow(unused)]
 use std::io::{self, Write, Read, Seek}; 
 use std::fs::{self, File, OpenOptions}; 
-use std::os::macos::raw;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use colored::*; 
@@ -110,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut currentState = State::Home;
     let user_config = manage_config();
 
-    let repo_list = git_actions::get_all_repositories(&user_config);
+    let mut repo_list = git_actions::get_all_repositories(&user_config);
     let mut repo_names_list = Vec::new();
     let mut repo_path_list = Vec::new();
     for repo in &repo_list {
@@ -124,13 +123,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         // update repo list, names, and path in case a repo got added or deleted
-        let repo_list = git_actions::get_all_repositories(&user_config);
-        let mut repo_names_list = Vec::new();
-        let mut repo_path_list = Vec::new();
-        for repo in &repo_list {
-            repo_names_list.push(repo.Name.clone());
-            repo_path_list.push(repo.Path.clone());
-        }
+        git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
 
         let input = command_line::get_git_input(&currentState);
 

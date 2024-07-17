@@ -212,3 +212,18 @@ pub fn find_file_in_path(path: &str, name: &str) -> Result<String, SearchError> 
 pub fn deleteDir(path: &String){
     println!("The user wants to delete a folder at: {}", &path)
 }
+
+
+pub fn update_repos(repo_list: &mut Vec<Repository>, repo_names_list: &mut Vec<String>, repo_path_list: &mut Vec<String>, user_config: &Config) {
+    // Aktualisiere die Repo-Liste, Namen und Pfade im Falle, dass ein Repo hinzugefügt oder gelöscht wurde
+    
+    let new_repo_list = git_actions::get_all_repositories(user_config);
+    *repo_list = new_repo_list;  // Übernehme die neuen Repos in die ursprüngliche Liste
+    
+    repo_names_list.clear();
+    repo_path_list.clear();
+    for repo in repo_list.iter() {
+        repo_names_list.push(repo.Name.clone());
+        repo_path_list.push(repo.Path.clone());
+    }
+}
