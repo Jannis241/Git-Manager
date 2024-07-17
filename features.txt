@@ -85,3 +85,4 @@ Generell:
 create repo und branch:
 - checken ob es das repo oder den branch schon gibt -> einmal auf git gucken und auf pc
 - fixxxen dass nicht immer die git liste geupdatet werden muss weil das zu viel performance vervraucht
+- so machen dass man nicht von über all aus alles machen kann zb muss man um ein repo zu erstellen im home state sein

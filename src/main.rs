@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
 use std::io::{self, Write, Read, Seek}; 
-use std::fs::{self, File, OpenOptions}; 
+use std::fs::{self, create_dir, File, OpenOptions}; 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use colored::*; 
@@ -102,6 +102,17 @@ fn check_name(name: &String, error_msg: &str) -> bool {
     }
 }
 
+fn check_if_empty_and_print_info(item: &str, message: &str) -> bool{
+    if item.trim() == ""{
+        let msg = message.split(",");
+        for part in msg {
+            println!("{}", part.green().italic())
+        }
+        return false;
+    }
+    return true;
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Searching your project directory for git repositories, this may take a while...");
@@ -152,7 +163,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "set" => {
                     let arg = arguements[1];
                     let change = rawArgs[2];
-                    if check_name(&arg.to_string(), "Arguement is missing"){
+                    if check_if_empty_and_print_info(&arg.to_string(), "set username,set key,set path"){
                         if check_name(&change.to_string(), "Empty change is not valid"){
 
                             match arg {
@@ -173,34 +184,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 }
                             }
                         
+                    }
                 }
-            }
-                
-                else {
-                    throw_error("open config to change your settings")
-                }
+            
                     
             }
 
             "show" => {
                 if currentState == State::Config {
-                    println!("username: {}", &user_config.username);
-                    println!("api key: {}", &user_config.api_key);
-                    println!("project path: {}", &user_config.project_path);
+                    println!("{}: {}", "username".blue().underline(), &user_config.username);
+                    println!("{}: {}", "api key".blue().underline(), &user_config.api_key);
+                    println!("{}: {}", "Project path".blue().underline(), &user_config.project_path);
                 }
-                if arguements[1] == "config"{
-                    println!("username: {}", &user_config.username);
-                    println!("api key: {}", &user_config.api_key);
-                    println!("project path: {}", &user_config.project_path);
 
-                }
                 else {
-                    throw_error("open config to see your settings")
+                    if check_if_empty_and_print_info(arguements[1], "show config"){
+                        if arguements[1] == "config"{
+                            println!("{}: {}", "username".blue().underline(), &user_config.username);
+                            println!("{}: {}", "api key".blue().underline(), &user_config.api_key);
+                            println!("{}: {}", "Project path".blue().underline(), &user_config.project_path);
+                        }
+                        else {
+                            throw_error(format!("Arguement '{}' not found", arguements[1]).as_str())
+                        }
+                    }
                 }
             } 
 
             "open" =>{
-                if check_name(&arguements[1].to_string(), "File name is missing"){
+                if check_if_empty_and_print_info(&arguements[1].to_string(), "open config,open <filename>"){
 
                     if arguements[1] == "config"{
                         currentState = State::Config;
@@ -244,7 +256,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
-                        if check_name(&name, "Project name is missing"){
+                        if check_if_empty_and_print_info(&name, "upload all,upload <name>"){
                             if repo_names_list.contains(&name) {
                                 git_actions::upload(&name, &"temp commit message".to_string());
                             }
@@ -258,7 +270,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             "download" => {
 
-                if check_name(&arguements[1].to_string(), "Arguement is missing"){
+                if check_if_empty_and_print_info(&arguements[1].to_string(), "download all from <user>,download <repo> from <user>"){
                     if arguements[1] == "all"{
                         if arguements[2] == "from" {
                             let username = rawArgs[3];
@@ -313,7 +325,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
-                        if check_name(&name, "Project name is missing"){
+                        if check_if_empty_and_print_info(&name, "update all,update <name>"){
                             if repo_names_list.contains(&name) {
                                 git_actions::update(&name);
                             }
@@ -327,7 +339,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             
             "delete" => {
                 let secondArg = arguements[1];
-                if check_name(&secondArg.to_string(), "Arguement is missing"){
+                let mut message = "";
+                if let State::Repo(ref reponame) = currentState{
+                    message = "delete repo,delete branch <name>"
+                }
+                else {
+                    message = "delete repo <name>,delete branch <name> from <repo>,delete folder <name>"
+                }
+                
+                if check_if_empty_and_print_info(&secondArg.to_string(), &message){
                     match secondArg{
                         "folder" => {
                             let name = rawArgs[2];
@@ -397,7 +417,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             "create" => {
                 let name = rawArgs[2].to_string();
-                if check_name(&arguements[1].to_string(), "Arguement is missing"){
+                let mut message = "";
+                if let State::Repo(ref reponame) = currentState{
+                    message = "create branch <name>"
+                }
+                else {
+                    message = "create repo <name>,create branch <name> in <repo>"
+                }
+                
+                if check_if_empty_and_print_info(&arguements[1].to_string(), &message){
 
                     if arguements[1] == "branch"{
                         if check_name(&name, "Branch name is missing"){
@@ -438,7 +466,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let name = rawArgs[1].to_string();
 
                 let projectPath = String::from(&user_config.project_path);
-                if check_name(&name.to_string(), "Project name is missing"){
+                if check_if_empty_and_print_info(&name.to_string(), "migrate <project> <public / private>"){
                     match git_actions::find_file_in_path(&projectPath, &name) {
                         Ok(file_path) => {
                             if !repo_names_list.contains(&name) {
