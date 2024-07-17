@@ -121,9 +121,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         repo_path_list.push(repo.Path.clone());
     }
 
-    command_line::clear_terminal();
-    println!("{}","Welcome to Git-Manager".white().bold().underline());
-    command_line::print_infos();
+    command_line::print_intro();
 
     loop {
         // update repo list, names, and path in case a repo got added or deleted

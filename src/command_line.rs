@@ -119,3 +119,10 @@ pub fn get_git_input(currentState: &State) -> (String, String) {
     let input = rawInput.to_lowercase();
     (input, rawInput)
 }
+
+
+pub fn print_intro() {
+    clear_terminal();
+    println!("{}","Welcome to Git-Manager".white().bold().underline());
+    print_infos();
+}
