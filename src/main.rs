@@ -61,9 +61,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     command_line::print_intro();
 
     loop {
-        // update repo list, names, and path in case a repo got added or deleted
-        git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
-
         let input = command_line::get_git_input(&currentState);
         
 
@@ -138,6 +135,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } 
 
             "open" =>{
+                if !repo_names_list.contains(&rawArgs[1].to_string()){
+                    git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config); 
+                }
                 if command_line::check_if_empty_and_print_info(&arguements[1].to_string(), "open config,open <filename>"){
 
                     if arguements[1] == "config"{
@@ -176,12 +176,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 else {
                     // upload a specific file
-                    
                     if let State::Repo(ref reponame) = currentState{
                         git_actions::upload(&reponame.to_string(), &"temp commit message".to_string());
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
+                        if !repo_names_list.contains(&name){
+                            git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
+                        }
                         if command_line::check_if_empty_and_print_info(&name, "upload all,upload <name>"){
                             if repo_names_list.contains(&name) {
                                 git_actions::upload(&name, &"temp commit message".to_string());
@@ -250,6 +252,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
+                        if !repo_names_list.contains(&name){
+                            git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
+                        }
                         if command_line::check_if_empty_and_print_info(&name, "update all,update <name>"){
                             if repo_names_list.contains(&name) {
                                 git_actions::update(&name);
@@ -338,6 +343,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
 
                 }
+
+                // update repo list, names, and path in case a repo got added or deleted
+                git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
             }
 
             "create" => {
@@ -384,6 +392,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         command_line::throw_error(format!("Arguement '{}' is not valid", arguements[1]).as_str())
                     }
                 }
+
+                // update repo list, names, and path in case a repo got added or deleted
+                git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
             }
 
             "migrate" => {
@@ -421,9 +432,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
 
                 }   
+                git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
+
             }
 
             "list" => {
+
+                // update repo list, names, and path in case a repo got added or deleted
+                git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
                 if repo_path_list.len() == 0 {
                     command_line::throw_error("No git projects found")
                 }
@@ -446,6 +462,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "" => print!(""),
             " " => print!(""),
             other => command_line::throw_error(format!("Command '{}' not found", other).as_str())
+
         };        
     
     }
