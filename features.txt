@@ -1,11 +1,3 @@
-
-Wichtig: 
-eventuell einzelne Funktionen in neue files packen ->
-funktionen die jetzt fertig sind und eigentlich nicht mehr verändert werden
-müssen könenn ja in ein neues file
-
---------------------------------------------------
-
 migrate: 
 - gucken ob es schon ein git dir ist
 

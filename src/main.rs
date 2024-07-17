@@ -5,8 +5,10 @@ use std::fs::{self, File, OpenOptions};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use colored::*; 
+use git_actions::{find_file_in_path, migrate};
 use serde::{Serialize, Deserialize};
 use reqwest::header;
+use thiserror::Error;
 
 mod command_line;
 mod git_actions;
@@ -265,7 +267,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             "migrate" => {
-                git_actions::migrate("sfsd".to_string(), "fsdfsdf".to_string(), true, "sdfsdfsdfs".to_string());
+
+                let name = rawArgs[1].to_string();
+
+                let projectPath = String::from(&user_config.project_path);
+                                
+                match git_actions::find_file_in_path(&projectPath, &name) {
+                    Ok(file_path) => {
+                        if !repo_names_list.contains(&name) {
+                            let privacy = arguements[2];
+        
+                            match privacy {
+                                "public" => {
+                                    migrate(&file_path, &name, true, &user_config.api_key);
+                                } 
+                                "private" => {
+                                    migrate(&file_path, &name, true, &user_config.api_key);
+                                }
+                                other => {
+                                    throw_error("migrate <project> <public / private>");
+                                }
+                            }
+                        }
+                        
+                        else {
+                            throw_error("Project is already on git")
+                        }
+                    }
+                    Err(git_actions::SearchError::NotFound) => throw_error(format!("Project '{}' not found in {}", &name, &projectPath).as_str()),
+                    Err(git_actions::SearchError::MultipleFound) => throw_error(format!("Found multiple projects with the name '{}'", &name).as_str()),
+                    other => throw_error("Unknown error ocurred while migrating"),
+                }
             }
 
             "list" => {

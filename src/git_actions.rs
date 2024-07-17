@@ -38,7 +38,7 @@ pub fn download(repo_name: &String, username: &String, path: &str) {
     }
 }
 
-pub fn migrate(projectPath: String, repoName: String, public: bool, api_key: String){
+pub fn migrate(projectPath: &String, repoName: &String, public: bool, api_key: &String){
     println!("the user wants to migrate a project:");
     println!("repo name: {}", repoName);
     println!("current project path: {}", projectPath);
@@ -154,5 +154,47 @@ pub fn print_repo_list(repo_paths: &Vec<String>) {
         let cleanPathSplit = path.split_inclusive("/").collect::<Vec<&str>>();
         
         println!("{}{}", cleanPathSplit[0..cleanPathSplit.len() - 2].join("").italic(), cleanPathSplit.last().unwrap().blue().italic().bold());
+    }
+}
+
+
+#[derive(Debug)]
+pub enum SearchError {
+    NotFound,
+    MultipleFound,
+    IoError(io::Error),
+}
+
+impl From<io::Error> for SearchError {
+    fn from(error: io::Error) -> Self {
+        SearchError::IoError(error)
+    }
+}
+
+pub fn find_file_in_path(path: &str, name: &str) -> Result<String, SearchError> {
+    let mut found_files = vec![];
+
+    fn search_directory(path: &PathBuf, name: &str, found_files: &mut Vec<PathBuf>) -> io::Result<()> {
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let entry_path = entry.path();
+
+            if entry_path.is_dir() {
+                if entry_path.file_name() == Some(std::ffi::OsStr::new(name)) {
+                    found_files.push(entry_path.clone());
+                }
+                search_directory(&entry_path, name, found_files)?;
+            }
+        }
+        Ok(())
+    }
+
+    let path = PathBuf::from(path);
+    search_directory(&path, name, &mut found_files)?;
+
+    match found_files.len() {
+        0 => Err(SearchError::NotFound),
+        1 => Ok(found_files.pop().unwrap().to_string_lossy().into_owned()),
+        _ => Err(SearchError::MultipleFound),
     }
 }
