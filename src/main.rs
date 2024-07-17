@@ -2,6 +2,7 @@
 #![allow(unused)]
 use std::io::{self, Write, Read, Seek}; 
 use std::fs::{self, File, OpenOptions}; 
+use std::os::macos::raw;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use colored::*; 
@@ -60,11 +61,11 @@ fn manage_config() -> Config{
             username: command_line::input("Username: "),
             project_path: command_line::input("Project path: "),
         };
-
+        write_to_json(&config_path, &config);
         // Write configuration to file
-        let serialized = serde_json::to_string(&config).expect("Failed to serialize config.");
-        let mut file = File::create(&path).expect("Failed to create config file.");
-        file.write_all(serialized.as_bytes()).expect("Failed to write config to file.");
+        //let serialized = serde_json::to_string(&config).expect("Failed to serialize config.");
+        //let mut file = File::create(&path).expect("Failed to create config file.");
+        //file.write_all(serialized.as_bytes()).expect("Failed to write config to file.");
         config
     }
 }
@@ -109,7 +110,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut currentState = State::Home;
 
     // init config
-    let user_config = manage_config();
+    let mut user_config = manage_config();
 
 
     // getting all of the repos
@@ -149,13 +150,52 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // command loop
         match arguements[0] {
+
+            "set" => {
+                if currentState == State::Config {
+                    let arg = arguements[1];
+                    let change = rawArgs[2];
+                    match arg {
+                        "username" => {
+                            user_config.username = change.to_string();
+                            write_to_json("./config.json", &user_config);
+                        }
+                        "key" => {
+                            user_config.api_key = change.to_string();
+                            write_to_json("./config.json", &user_config);
+                        }
+                        "path" => {
+                            user_config.project_path = change.to_string();
+                            write_to_json("./config.json", &user_config);
+                        }
+                        other => {
+                            throw_error(format!("command {} not found", other).as_str());
+                        }
+                    }
+                }
+                else {
+                    throw_error("open config to change your settings")
+                }
+            }
+
+            "show" => {
+                if currentState == State::Config {
+                    println!("username: {}", &user_config.username);
+                    println!("api key: {}", &user_config.api_key);
+                    println!("project path: {}", &user_config.project_path);
+                }
+                else {
+                    throw_error("open config to see settings")
+                }
+            } 
+
             "open" =>{
                 if arguements[1] == "config"{
                     currentState = State::Config;
 
                     // set username: "fufu"
                     // set api_key: "132456"
-                    // set project path: "2342524643563"
+                    // set path: "2342524643563"
                 }
 
                 else if repo_names_list.contains(&rawArgs[1].to_string()){
@@ -375,7 +415,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             "list" => {
-                git_actions::print_repo_list(&repo_path_list);
+                if repo_path_list.len() == 0 {
+                    throw_error("no git projects found")
+                }
+                else {
+                    git_actions::print_repo_list(&repo_path_list);
+                }
             }
             "close" => {
                 currentState = State::Home;

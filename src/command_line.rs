@@ -132,9 +132,10 @@ pub fn print_config_infos() {
     use colored::*;
     new_lines(1);
     let commands_info = vec![
-        ("set username: 'name'", "Change your username"),
-        ("set projectPath: 'path'", "Change your project Path"),
-        ("set key: 'api key'", "Change your api key"),
+        ("set username <name>", "Change your username"),
+        ("set path <path>", "Change your project Path"),
+        ("set key <key>", "Change your api key"),
+        ("show", "display your current settings"),
         ("close / back", "Get back to the home state"),
         ("exit / q", "Exit the Git-Manager"),
         ("clear", "Clear the terminal"),
