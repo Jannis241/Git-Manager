@@ -5,22 +5,21 @@ use std::fs::{self, create_dir, File, OpenOptions};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use colored::*; 
-use git_actions::{find_file_in_path, migrate};
+use git_actions::*;
 use serde::{Serialize, Deserialize};
 use reqwest::header;
 use thiserror::Error;
 
+mod config_manager;
 mod command_line;
 mod git_actions;
 
 #[derive(PartialEq)]
-#[derive(Debug)]
 pub enum State {
     Home,
     Repo(String), // repo name
     Config,
 }
-
 
 #[derive(Deserialize)]
 pub struct Repository {
@@ -34,83 +33,11 @@ struct CloneData {
     clone_url: String
 }
 
-#[derive(Debug)]
 #[derive(Serialize, Deserialize)]
 struct Config {
     api_key: String,
     username: String,
     project_path: String,
-}
-
-fn manage_config() -> Config{
-    let config_path = "./config.json";
-    let path = Path::new(&config_path);
-
-    let mut config: Config;
-
-    if path.exists() {
-        // Read existing configuration from file
-        let file = File::open(&path).expect("Failed to open config file.");
-        config = serde_json::from_reader(file).expect("Failed to parse config file.");
-        config
-    } else {
-        // Prompt user for configuration input
-        let config = Config {
-            api_key: command_line::input("API Key: "),
-            username: command_line::input("Username: "),
-            project_path: command_line::input("Project path: "),
-        };
-        write_to_json(&config_path, &config);
-        // Write configuration to file
-        //let serialized = serde_json::to_string(&config).expect("Failed to serialize config.");
-        //let mut file = File::create(&path).expect("Failed to create config file.");
-        //file.write_all(serialized.as_bytes()).expect("Failed to write config to file.");
-        config
-    }
-}
-
-fn write_to_json(file_path: &str, config: &Config) {
-    // Convert the Config instance to JSON format
-    let json = serde_json::to_string_pretty(config).expect("Failed to serialize config");
-
-    // Open the file in read/write mode, creating it if it doesn't exist
-    let mut file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .open(file_path)
-        .expect("Failed to open file");
-
-    // Write the JSON data to the file
-    file.write_all(json.as_bytes())
-        .expect("Failed to write to file");
-
-    println!("Data written to config.json successfully");
-}
-
-fn throw_error(msg: &str){
-    println!("{}: {}", "ERROR".bold().red().underline(), msg.red())
-}
-
-fn check_name(name: &String, error_msg: &str) -> bool {
-    if name.trim() == ""{
-        throw_error(error_msg);
-        return false;
-    }
-    else {
-        return true;
-    }
-}
-
-fn check_if_empty_and_print_info(item: &str, message: &str) -> bool{
-    if item.trim() == ""{
-        let msg = message.split(",");
-        for part in msg {
-            println!("{}", part.green().italic())
-        }
-        return false;
-    }
-    return true;
 }
 
 #[tokio::main]
@@ -120,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut currentState = State::Home;
 
     // init config
-    let mut user_config = manage_config();
+    let mut user_config = config_manager::manage_config();
 
 
     // getting all of the repos
@@ -163,24 +90,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "set" => {
                     let arg = arguements[1];
                     let change = rawArgs[2];
-                    if check_if_empty_and_print_info(&arg.to_string(), "set username,set key,set path"){
-                        if check_name(&change.to_string(), "Empty change is not valid"){
+                    if command_line::check_if_empty_and_print_info(&arg.to_string(), "set username,set key,set path"){
+                        if command_line::check_name(&change.to_string(), "Empty change is not valid"){
 
                             match arg {
                                 "username" => {
                                     user_config.username = change.to_string();
-                                    write_to_json("./config.json", &user_config);
+                                    config_manager::write_to_json("./config.json", &user_config);
                                 }
                                 "key" => {
                                     user_config.api_key = change.to_string();
-                                    write_to_json("./config.json", &user_config);
+                                    config_manager::write_to_json("./config.json", &user_config);
                                 }
                                 "path" => {
                                     user_config.project_path = change.to_string();
-                                    write_to_json("./config.json", &user_config);
+                                    config_manager::write_to_json("./config.json", &user_config);
                                 }
                                 other => {
-                                    throw_error(format!("Arguement {} is not valid", other).as_str());
+                                    command_line::throw_error(format!("Arguement {} is not valid", other).as_str());
                                 }
                             }
                         
@@ -198,21 +125,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
 
                 else {
-                    if check_if_empty_and_print_info(arguements[1], "show config"){
+                    if command_line::check_if_empty_and_print_info(arguements[1], "show config"){
                         if arguements[1] == "config"{
                             println!("{}: {}", "username".blue().underline(), &user_config.username);
                             println!("{}: {}", "api key".blue().underline(), &user_config.api_key);
                             println!("{}: {}", "Project path".blue().underline(), &user_config.project_path);
                         }
                         else {
-                            throw_error(format!("Arguement '{}' not found", arguements[1]).as_str())
+                            command_line::throw_error(format!("Arguement '{}' not found", arguements[1]).as_str())
                         }
                     }
                 }
             } 
 
             "open" =>{
-                if check_if_empty_and_print_info(&arguements[1].to_string(), "open config,open <filename>"){
+                if command_line::check_if_empty_and_print_info(&arguements[1].to_string(), "open config,open <filename>"){
 
                     if arguements[1] == "config"{
                         currentState = State::Config;
@@ -224,7 +151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         command_line::print_in_file_infos();
                     }
                     else {
-                        throw_error("File not found")
+                        command_line::throw_error("File not found")
                     }
                 }
             }
@@ -256,12 +183,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
-                        if check_if_empty_and_print_info(&name, "upload all,upload <name>"){
+                        if command_line::check_if_empty_and_print_info(&name, "upload all,upload <name>"){
                             if repo_names_list.contains(&name) {
                                 git_actions::upload(&name, &"temp commit message".to_string());
                             }
                             else {
-                                throw_error("File not found");
+                                command_line::throw_error("File not found");
                             }
                         }
                     }
@@ -270,11 +197,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             "download" => {
 
-                if check_if_empty_and_print_info(&arguements[1].to_string(), "download all from <user>,download <repo> from <user>"){
+                if command_line::check_if_empty_and_print_info(&arguements[1].to_string(), "download all from <user>,download <repo> from <user>"){
                     if arguements[1] == "all"{
                         if arguements[2] == "from" {
                             let username = rawArgs[3];
-                            if check_name(&username.to_string(), "Username is missing"){
+                            if command_line::check_name(&username.to_string(), "Username is missing"){
                                 if username == user_config.username {
                                     // download own repos so also privat repos
                                     if username == &user_config.username {
@@ -290,26 +217,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                         else {
-                            throw_error("Keyword 'from' is missing: download all from <user>");
+                            command_line::throw_error("Keyword 'from' is missing: download all from <user>");
                         }
                     }
                     else {
                         let repoName = rawArgs[1];
                         
-                        if check_name(&repoName.to_string(), "Repository name is missing"){
+                        if command_line::check_name(&repoName.to_string(), "Repository name is missing"){
                             if arguements[2] == "from" {
                                 let username = rawArgs[3];
-                                if check_name(&username.to_string(), "Username is missing"){
+                                if command_line::check_name(&username.to_string(), "Username is missing"){
                                     git_actions::download(&repoName.to_string(), &username.to_string(), &user_config.project_path)
                                 }
                             }
                             else{
-                                throw_error("Keyword 'from' is missing: download <repo> from <user>");
+                                command_line::throw_error("Keyword 'from' is missing: download <repo> from <user>");
                             }
                         }
                     }
                 }
-                
             }
 
             "update" => {
@@ -325,12 +251,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
-                        if check_if_empty_and_print_info(&name, "update all,update <name>"){
+                        if command_line::check_if_empty_and_print_info(&name, "update all,update <name>"){
                             if repo_names_list.contains(&name) {
                                 git_actions::update(&name);
                             }
                             else {
-                                throw_error("File not found");
+                                command_line::throw_error("File not found");
                             }
                         }
                    }
@@ -347,20 +273,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     message = "delete repo <name>,delete branch <name> from <repo>,delete folder <name>"
                 }
                 
-                if check_if_empty_and_print_info(&secondArg.to_string(), &message){
+                if command_line::check_if_empty_and_print_info(&secondArg.to_string(), &message){
                     match secondArg{
                         "folder" => {
                             let name = rawArgs[2];
                             let path = git_actions::find_file_in_path(&user_config.project_path, &name);
-                            if check_name(&name.to_string(), "Folder name is missing"){
+                            if command_line::check_name(&name.to_string(), "Folder name is missing"){
                                 // delete folder <name>
                                 match path {
                                     Ok(filePath) => {
                                         git_actions::deleteDir(&filePath);
                                     }
-                                    Err(git_actions::SearchError::NotFound) => throw_error(format!("Folder '{}' not found in {}", &name, &user_config.project_path).as_str()),
-                                    Err(git_actions::SearchError::MultipleFound) => throw_error(format!("Found multiple projects with the name '{}'", &name).as_str()),
-                                    other => throw_error("Unknown error ocurred while migrating"),
+                                    Err(git_actions::SearchError::NotFound) => command_line::throw_error(format!("Folder '{}' not found in {}", &name, &user_config.project_path).as_str()),
+                                    Err(git_actions::SearchError::MultipleFound) => command_line::throw_error(format!("Found multiple projects with the name '{}'", &name).as_str()),
+                                    other => command_line::throw_error("Unknown error ocurred while migrating"),
                             }
 
                             }
@@ -373,12 +299,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             else {
                                 // chekcne ob es das repo gibt
                                 let name = rawArgs[2];
-                                if check_name(&name.to_string(), "Repository name is missing"){
+                                if command_line::check_name(&name.to_string(), "Repository name is missing"){
                                     if repo_names_list.contains(&name.to_string()) {
                                         git_actions::delete_repo(&name.to_string(), &user_config.api_key);
                                     }
                                     else {
-                                        throw_error("Repository not found")
+                                        command_line::throw_error("Repository not found")
                                     }
                                 }
 
@@ -392,21 +318,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                             else{
                                 let branchName = rawArgs[2];
-                                if check_name(&branchName.to_string(), "Branch name is missing"){
+                                if command_line::check_name(&branchName.to_string(), "Branch name is missing"){
                                     if arguements[3] == "from" {
                                         let repoName = rawArgs[4];
-                                        if check_name(&repoName.to_string(), "Repository name is missing"){
+                                        if command_line::check_name(&repoName.to_string(), "Repository name is missing"){
 
                                         git_actions::delete_branch(&repoName.to_string(), &branchName.to_string(), &user_config.api_key);
                                         }
                                     }
                                     else {
-                                        throw_error("Keyword 'from' is missing: delete branch <name> from <repo>")
+                                        command_line::throw_error("Keyword 'from' is missing: delete branch <name> from <repo>")
                                     }
                                 }
                             } 
                         }
-                        other => throw_error(format!("Arguement '{}' is not valid", secondArg).as_str())
+                        other => command_line::throw_error(format!("Arguement '{}' is not valid", secondArg).as_str())
                         
 
 
@@ -425,29 +351,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     message = "create repo <name>,create branch <name> in <repo>"
                 }
                 
-                if check_if_empty_and_print_info(&arguements[1].to_string(), &message){
+                if command_line::check_if_empty_and_print_info(&arguements[1].to_string(), &message){
 
                     if arguements[1] == "branch"{
-                        if check_name(&name, "Branch name is missing"){
+                        if command_line::check_name(&name, "Branch name is missing"){
                             if let State::Repo(ref repoName) = currentState {
                                 git_actions::create_branch(&repoName, &name, &user_config.api_key);
                             }
                             else {
                                 if arguements[3] == "in"{
                                     let repoName = rawArgs[4];
-                                    if check_name(&repoName.to_string(), "Repository name is missing"){
+                                    if command_line::check_name(&repoName.to_string(), "Repository name is missing"){
                                         git_actions::create_branch(&repoName.to_string(), &name, &user_config.api_key);
                                     }
                                 }
 
                                 else {
-                                    throw_error("Keyword 'in' is missing: create branch <name> in <repo>");
+                                    command_line::throw_error("Keyword 'in' is missing: create branch <name> in <repo>");
                                 }
                             }
                         }    
                     }
                     else if arguements[1] == "repo" {
-                        if check_name(&name, "Repository name is missing"){
+                        if command_line::check_name(&name, "Repository name is missing"){
                             // create repo <name> <public / private> 
                             let name = rawArgs[2];
                             let privacy = arguements[3];
@@ -456,7 +382,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }       
                     } 
                     else {
-                        throw_error(format!("Arguement '{}' is not valid", arguements[1]).as_str())
+                        command_line::throw_error(format!("Arguement '{}' is not valid", arguements[1]).as_str())
                     }
                 }
             }
@@ -466,12 +392,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let name = rawArgs[1].to_string();
 
                 let projectPath = String::from(&user_config.project_path);
-                if check_if_empty_and_print_info(&name.to_string(), "migrate <project> <public / private>"){
+                if command_line::check_if_empty_and_print_info(&name.to_string(), "migrate <project> <public / private>"){
                     match git_actions::find_file_in_path(&projectPath, &name) {
                         Ok(file_path) => {
                             if !repo_names_list.contains(&name) {
                                 let privacy = arguements[2];
-                                if check_name(&privacy.to_string(), "Privacy arguement is missing: migrate <project> <public/private>"){
+                                if command_line::check_name(&privacy.to_string(), "Privacy arguement is missing: migrate <project> <public/private>"){
                                     match privacy {
                                         "public" => {
                                             migrate(&file_path, &name, true, &user_config.api_key);
@@ -480,19 +406,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                             migrate(&file_path, &name, true, &user_config.api_key);
                                         }
                                         other => {
-                                            throw_error(format!("Privacy arguement '{}' is invalid (public/private)", privacy).as_str());
+                                            command_line::throw_error(format!("Privacy arguement '{}' is invalid (public/private)", privacy).as_str());
                                         }
                                     }
                                 }
                             }
                             
                             else {
-                                throw_error("Project is already on git")
+                                command_line::throw_error("Project is already on git")
                             }
                         }
-                        Err(git_actions::SearchError::NotFound) => throw_error(format!("Project '{}' not found in {}", &name, &projectPath).as_str()),
-                        Err(git_actions::SearchError::MultipleFound) => throw_error(format!("Found multiple projects with the name '{}'", &name).as_str()),
-                        other => throw_error("Unknown error ocurred while migrating"),
+                        Err(git_actions::SearchError::NotFound) => command_line::throw_error(format!("Project '{}' not found in {}", &name, &projectPath).as_str()),
+                        Err(git_actions::SearchError::MultipleFound) => command_line::throw_error(format!("Found multiple projects with the name '{}'", &name).as_str()),
+                        other => command_line::throw_error("Unknown error ocurred while migrating"),
                     }
 
                 }   
@@ -500,7 +426,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             "list" => {
                 if repo_path_list.len() == 0 {
-                    throw_error("No git projects found")
+                    command_line::throw_error("No git projects found")
                 }
                 else {
                     git_actions::print_repo_list(&repo_path_list);
@@ -520,7 +446,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "clear" => command_line::clear_terminal(),
             "" => print!(""),
             " " => print!(""),
-            other => throw_error(format!("Command '{}' not found", other).as_str())
+            other => command_line::throw_error(format!("Command '{}' not found", other).as_str())
         };        
     
     }

@@ -2,6 +2,10 @@
 #![allow(unused)]
 use crate::*;
 
+pub fn throw_error(msg: &str){
+    println!("{}: {}", "ERROR".bold().red().underline(), msg.red())
+}
+
 pub fn new_lines(num_of_lines: usize) {
     println!("{}", "\n".repeat(num_of_lines));
 }
@@ -97,8 +101,6 @@ pub fn print_infos() {
     new_lines(1);
 }
 
-
-
 pub fn get_git_input(currentState: &State) -> (String, String) {
     match currentState {
         State::Home => {
@@ -120,13 +122,11 @@ pub fn get_git_input(currentState: &State) -> (String, String) {
     (input, rawInput)
 }
 
-
 pub fn print_intro() {
     clear_terminal();
     println!("{}","Welcome to Git-Manager".white().bold().underline());
     print_infos();
 }
-
 
 pub fn print_config_infos() {
     use colored::*;
@@ -160,3 +160,26 @@ pub fn print_config_infos() {
 
     println!("{}", "These are just the commands that changed, others like 'download all' still work.".italic().white());
 }
+
+
+pub fn check_name(name: &String, error_msg: &str) -> bool {
+    if name.trim() == ""{
+        command_line::throw_error(error_msg);
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
+pub fn check_if_empty_and_print_info(item: &str, message: &str) -> bool{
+    if item.trim() == ""{
+        let msg = message.split(",");
+        for part in msg {
+            println!("{}", part.green().italic())
+        }
+        return false;
+    }
+    return true;
+}
+
