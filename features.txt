@@ -58,7 +58,7 @@ create repo:
 
 
 Generell:
--command info checken -> default / file State
+-command info checken -> default / file State / config
 - vorschläge wenn man ein file falsch schreibt 
 - auto completion für befehle
 - pull push combi (add, commit, pull --rebase, push)
@@ -68,6 +68,6 @@ Generell:
 - alle git functions einbauen
 - überall die daten eintragen, teilweise sind nur place holder daten, das heißt der richtige api key usw
 -überall gucken dass die namen von den rawArgs sind und die commands von den arguements
-
+- die help commands für config file und home verbessern
 create repo und branch:
 - checken ob es das repo oder den branch schon gibt -> einmal auf git gucken und auf pc

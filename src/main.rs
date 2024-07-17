@@ -152,6 +152,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "open" =>{
                 if arguements[1] == "config"{
                     currentState = State::Config;
+
+                    // set username: "fufu"
+                    // set api_key: "132456"
+                    // set project path: "2342524643563"
                 }
 
                 else if repo_names_list.contains(&rawArgs[1].to_string()){
@@ -165,9 +169,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             "help" => {
-                command_line::new_lines(1);
-                command_line::print_infos();
-                command_line::new_lines(1);
+                if State::Config == currentState {
+                    command_line::print_config_infos();
+                }
+                if let State::Repo(ref repoName) = currentState {
+                    command_line::print_in_file_infos();
+                }
+                if State::Home == currentState {
+                    command_line::print_infos();
+                }
             }
 
             "upload" => {

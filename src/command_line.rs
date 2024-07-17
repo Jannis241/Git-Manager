@@ -126,3 +126,36 @@ pub fn print_intro() {
     println!("{}","Welcome to Git-Manager".white().bold().underline());
     print_infos();
 }
+
+
+pub fn print_config_infos() {
+    use colored::*;
+    new_lines(1);
+    let commands_info = vec![
+        ("set username: 'name'", "Change your username"),
+        ("set projectPath: 'path'", "Change your project Path"),
+        ("set key: 'api key'", "Change your api key"),
+        ("close / back", "Get back to the home state"),
+        ("exit / q", "Exit the Git-Manager"),
+        ("clear", "Clear the terminal"),
+    ];
+
+    let max_command_length = commands_info.iter()
+        .map(|(cmd, _)| cmd.len())
+        .max()
+        .unwrap_or(0);
+
+    println!("{}", "Commands:".bold().underline().green());
+    for (command, description) in commands_info {
+        let padding = max_command_length - command.len();
+        println!(
+            "{}{}    {}",
+            command.bold().blue(),
+            " ".repeat(padding),
+            description.italic().white()
+        );
+    }
+    new_lines(1);
+
+    println!("{}", "These are just the commands that changed, others like 'download all' still work.".italic().white());
+}
