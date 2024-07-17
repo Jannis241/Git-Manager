@@ -107,8 +107,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Searching your project directory for git repositories, this may take a while...");
 
     let mut currentState = State::Home;
+
+    // init config
     let user_config = manage_config();
 
+
+    // getting all of the repos
     let mut repo_list = git_actions::get_all_repositories(&user_config);
     let mut repo_names_list = Vec::new();
     let mut repo_path_list = Vec::new();
@@ -126,7 +130,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
 
         let input = command_line::get_git_input(&currentState);
+        
 
+        // arguements for the commands and rawArgs for names -> for uppercase and lowercase letters
         let mut arguements = input.0.split_whitespace().collect::<Vec<&str>>();
         let mut rawArgs = input.1.split_whitespace().collect::<Vec<&str>>();
         
@@ -143,7 +149,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         rawArgs.push(" ");
         rawArgs.push(" ");
 
-        
+        // command loop
         match arguements[0] {
             "open" =>{
                 if arguements[1] == "config"{
