@@ -3,11 +3,6 @@ create_repo:
 - public oder private
 - name
 
-open config:
-- reset
-- set username
-- set api_key
-- set project_path
 
 oder ohne open config zu machen:
 - config set username <name>
@@ -89,3 +84,4 @@ Generell:
 - die help commands für config file und home verbessern
 create repo und branch:
 - checken ob es das repo oder den branch schon gibt -> einmal auf git gucken und auf pc
+- fixxxen dass nicht immer die git liste geupdatet werden muss weil das zu viel performance vervraucht

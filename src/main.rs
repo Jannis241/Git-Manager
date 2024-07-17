@@ -150,7 +150,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // command loop
         match arguements[0] {
             "set" => {
-                if currentState == State::Config {
                     let arg = arguements[1];
                     let change = rawArgs[2];
                     if check_name(&arg.to_string(), "Arguement is missing"){
@@ -173,9 +172,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     throw_error(format!("Arguement {} is not valid", other).as_str());
                                 }
                             }
-                        }
+                        
                 }
             }
+                
                 else {
                     throw_error("open config to change your settings")
                 }
@@ -187,6 +187,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("username: {}", &user_config.username);
                     println!("api key: {}", &user_config.api_key);
                     println!("project path: {}", &user_config.project_path);
+                }
+                if arguements[1] == "config"{
+                    println!("username: {}", &user_config.username);
+                    println!("api key: {}", &user_config.api_key);
+                    println!("project path: {}", &user_config.project_path);
+
                 }
                 else {
                     throw_error("open config to see your settings")

@@ -108,7 +108,7 @@ pub fn get_git_input(currentState: &State) -> (String, String) {
             print!("<{}> ", &repoName);
         }
         State::Config => {
-            print!("<Config> ");
+            print!("<config> ");
         }
     }
 
