@@ -1,0 +1,57 @@
+create:
+- wo auf dem pc soll das repo gespeichert werden als
+extra parameter (default ist der project path)
+- angeben ob es public oder private sein soll
+- guckenn ob es das reop / den branch schon gibt
+- gucken ob man der owner des repos ist falls ein branch erstellt werden soll
+
+upload:
+- force (all und einzelnd)
+- commit message
+- branche (default ist main)
+- zu der upload function muss der path des ordners mit
+dem repository angegeben werden
+- gucken falls ein file nicht gefunden wird ob vielleicht
+nur die groß und klein schreibung falsch ist, alles auf
+lowercase setzten
+
+update:
+- force
+- branch name (default ist main)
+- path muss angegeben werden
+- groß und klein schreibung checken
+
+download:
+- optionaler parameter "path" -> bestimmen wohin es klont werden
+soll
+
+
+delete:
+- delete folder from pc
+- delete repo from acc -> gucken ob das repo auf dem acc des users ist
+- delete branch -> gucken ob es das repo, den branch gibt und ob man rechte hat
+- bestigung dass man es wirlich löschen will
+- lokales löschen einfacher machen -> open funktion auch für normale dateien
+machen, einfach so wie bei ls, so dass man nur dei dateien beeinflussen kann in dessen
+directory man auch ist
+- bestätigungs nachricht falls es gelöscht wurde
+
+migrate:
+- privacy
+- path soll gleich bleiben 
+- git init 
+
+Allgemein:
+- command infos richitg machen (auch auf states achten)
+- auto completion für befehle (tab)
+- auto completion für files (tab)
+- lösung finden sodass die git liste nicht immer geupdatet werden muss
+da das zu laggst führt bei großen projecten
+- so machen dass man nicht von überall alles machen kann (State)
+
+
+Funktionen:
+- list all repos on github -> entweder vom user oder einem fremden (indicator ob es privat ist oder nicht)
+- list all branches (man muss in einem project sein oder den repo namen angeben)
+- switch branches
+- pull push combi

@@ -1,14 +1,13 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
-use std::io::{self, Write, Read, Seek}; 
-use std::fs::{self, create_dir, File, OpenOptions}; 
+use std::io::{self, Write}; 
+use std::fs::{self, File, OpenOptions}; 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use colored::*; 
 use git_actions::*;
 use serde::{Serialize, Deserialize};
 use reqwest::header;
-use thiserror::Error;
 
 mod config_manager;
 mod command_line;
@@ -160,7 +159,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if State::Config == currentState {
                     command_line::print_config_infos();
                 }
-                if let State::Repo(ref repoName) = currentState {
+                if let State::Repo(ref _reponame) = currentState {
                     command_line::print_in_file_infos();
                 }
                 if State::Home == currentState {
@@ -265,8 +264,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             
             "delete" => {
                 let secondArg = arguements[1];
-                let mut message = "";
-                if let State::Repo(ref reponame) = currentState{
+                let mut message ;
+                if let State::Repo(ref _reponame) = currentState{
                     message = "delete repo,delete branch <name>"
                 }
                 else {
