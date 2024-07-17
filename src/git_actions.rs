@@ -1,5 +1,13 @@
 use crate::*;
 
+pub fn delete_repo(repoName: &String, api_key: &String){
+    println!("The user wants to delete the repo {}", repoName);
+}
+
+pub fn delete_branch(repoName: &String, branchName: &String, api_key: &String){
+    println!("the user wants to delete the branch {} from the repo {}", branchName, repoName);
+}
+
 pub fn create_repo(repoName: &String, public: &bool, path: &String, api_key: &String){
     println!("the user wants to create a repo:");
     println!("Name: {}", repoName);
@@ -197,4 +205,10 @@ pub fn find_file_in_path(path: &str, name: &str) -> Result<String, SearchError> 
         1 => Ok(found_files.pop().unwrap().to_string_lossy().into_owned()),
         _ => Err(SearchError::MultipleFound),
     }
+}
+
+
+
+pub fn deleteDir(path: &String){
+    println!("The user wants to delete a folder at: {}", &path)
 }

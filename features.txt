@@ -1,6 +1,3 @@
-migrate: 
-- gucken ob es schon ein git dir ist
-
 create_repo:
 - wo auf dem pc (path)
 - public oder private
@@ -48,8 +45,9 @@ delete:
 - es muss bestätigt werden falls man etwas löschen will
 also nochmal eine extra abfrage
 - error info falls das repo nicht dem user gehört (config file checken)
-
-
+- gucken ob es das repo überhaupt gibt (git)
+- muss checken ob man in einem file ist -> dann kann man direkt delete repo machen oder delete branch xy ohen namen
+- bestätigungs nachricht falls das repo gelöscht wurde
 create repo:
 - name als parameter
 - path als optionaler parameter (default ist project folder)
@@ -67,3 +65,9 @@ Generell:
 - git add, commit funktionen adden
 - branch merge feature
 - switch branch feature
+- alle git functions einbauen
+- überall die daten eintragen, teilweise sind nur place holder daten, das heißt der richtige api key usw
+-überall gucken dass die namen von den rawArgs sind und die commands von den arguements
+
+create repo und branch:
+- checken ob es das repo oder den branch schon gibt -> einmal auf git gucken und auf pc

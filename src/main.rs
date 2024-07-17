@@ -2,6 +2,7 @@
 #![allow(unused)]
 use std::io::{self, Write, Read, Seek}; 
 use std::fs::{self, File, OpenOptions}; 
+use std::os::macos::raw;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use colored::*; 
@@ -243,27 +244,93 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             "delete" => {
+                let secondArg = arguements[1];
+                match secondArg{
+                    "folder" => {
+                        // delete folder <name>
+                        let name = rawArgs[2];
+                        let path = git_actions::find_file_in_path(&user_config.project_path, &name);
+                        match path {
+                            Ok(filePath) => {
+                                git_actions::deleteDir(&filePath);
+                            }
+                            Err(git_actions::SearchError::NotFound) => throw_error(format!("Project '{}' not found in {}", &name, &user_config.project_path).as_str()),
+                            Err(git_actions::SearchError::MultipleFound) => throw_error(format!("Found multiple projects with the name '{}'", &name).as_str()),
+                            other => throw_error("Unknown error ocurred while migrating"),
+                        }
+                    }
+                    "repo" => {
+                        if let State::Repo(ref reponame) = currentState{
+                            git_actions::delete_repo(&reponame, &user_config.api_key);
+                            currentState = State::Home; // move back to home since the repo is deleted
+                        }
+                        else {
+                            // chekcne ob es das repo gibt
+                            let name = rawArgs[2];
+                            
+                            if repo_names_list.contains(&name.to_string()) {
+                                git_actions::delete_repo(&name.to_string(), &user_config.api_key);
+                            }
+                            else {
+                                throw_error("Repository not found")
+                            }
+
+                        }                
+                    }
+                    "branch" => {
+                        if let State::Repo(ref reponame) = currentState{
+                            let branchName = rawArgs[2];
+                            git_actions::delete_branch(&reponame,&branchName.to_string(),&user_config.api_key);
+                        }
+                        else if arguements[3] == "from"{
+                            println!("from activated");
+                            let branchName = rawArgs[2];
+                            let name = rawArgs[4];
+                            git_actions::delete_branch(&name.to_string(), &branchName.to_string(), &user_config.api_key);
+                        } 
+                        else {
+                            throw_error("Repository name is missing: delete <branch> from <repo name>")
+                        } 
+                    }
+                    other => throw_error(format!("command '{}' not found", secondArg).as_str())
+                    
+
+
+                }
             }
 
             "create" => {
                 let name = rawArgs[2].to_string();
                 
                 if arguements[1] == "branch"{
-                    if check_name(&name, "Empty branch name is not valid"){
+                    if check_name(&name, "Branch name is missing"){
                         if let State::Repo(ref repoName) = currentState {
-                            git_actions::create_branch(&repoName, &name, &"sdfsfsffdsfs".to_string());
+                            git_actions::create_branch(&repoName, &name, &user_config.api_key);
                         }
                         else {
-                            throw_error("You have to open a specific repo to create a branch")
+                            if arguements[3] == "in"{
+                                let repoName = rawArgs[4];
+                                git_actions::create_branch(&repoName.to_string(), &name, &user_config.api_key);
+                            }
+
+                            else {
+                                throw_error("Repository name is missing: create branch <name> in <repo name>");
+                            }
                         }
                     }    
                 }
                 else if arguements[1] == "repo" {
-                    if check_name(&name, "Empty repository name is not valid"){
-                        git_actions::create_repo(&"sfsdfsdgs".to_string(), &true, &"sdfsdfsdfsf".to_string(), &"sdfsfsdf".to_string());
+                    if check_name(&name, "Repository name is missing"){
+                        // create repo <name> <public / private> 
+                        let name = rawArgs[2];
+                        let privacy = arguements[3];
+                        git_actions::create_repo(&name.to_string(), &true, &"sdfsdfsdfsf".to_string(), &"sdfsfsdf".to_string());
 
                     }       
                 } 
+                else {
+                    throw_error(format!("command '{}' not found", arguements[1]).as_str())
+                }
             }
 
             "migrate" => {
@@ -317,7 +384,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "clear" => command_line::clear_terminal(),
             "" => print!(""),
             " " => print!(""),
-            other => println!("command '{}' not found", other.bold()),
+            other => throw_error(format!("command '{}' not found", other).as_str())
         };        
     
     }
