@@ -7,6 +7,7 @@ use std::fs::{self, File, OpenOptions};
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::process::Command;
 use colored::*; 
+use command_line::throw_error;
 use git_actions::*;
 use serde::{Serialize, Deserialize};
 use reqwest::header;
@@ -41,15 +42,9 @@ struct Config {
 }
 
 fn avoid_index_error(args: &mut Vec<&str>){
-    args.push(" ");
-    args.push(" ");
-    args.push(" ");
-    args.push(" ");
-    args.push(" ");
-    args.push(" ");
-    args.push(" ");
-    args.push(" ");
-    args.push(" ");
+    for i in 0..10{
+        args.push(" ");
+    }
 }
 
 #[tokio::main]
@@ -409,8 +404,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if command_line::check_name(&name, "Repository name is missing"){
                             // create repo <name> <public / private> 
                             let name = rawArgs[2];
-                            let privacy = arguements[3];
-                            git_actions::create_repo(&name.to_string(), &true, &"sdfsdfsdfsf".to_string(), &"sdfsfsdf".to_string());
+                            let mut privacystr = arguements[3];
+                            let mut privacy = true;
+                            match privacystr {
+                                "public" => {
+                                    create_repo(&name.to_string(), &true, &user_config.project_path, &user_config.api_key)
+                                } 
+                                "private" => {
+                                    create_repo(&name.to_string(), &false, &user_config.project_path, &user_config.api_key)
+                                }
+                                other => {
+                                    command_line::throw_error(format!("Privacy arguement '{}' is invalid (public/private)", privacy).as_str());
+                                }
+                            }
 
                         }       
                     } 
@@ -439,7 +445,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                             migrate(&file_path, &name, true, &user_config.api_key);
                                         } 
                                         "private" => {
-                                            migrate(&file_path, &name, true, &user_config.api_key);
+                                            migrate(&file_path, &name, false, &user_config.api_key);
                                         }
                                         other => {
                                             command_line::throw_error(format!("Privacy arguement '{}' is invalid (public/private)", privacy).as_str());
