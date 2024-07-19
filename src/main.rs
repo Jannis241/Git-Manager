@@ -14,7 +14,6 @@ use reqwest::header;
 mod config_manager;
 mod command_line;
 mod git_actions;
-
 #[derive(PartialEq)]
 pub enum State {
     Home,
@@ -73,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     command_line::print_intro();
-
+    
     loop {
         let input = command_line::get_git_input(&currentState);
         

@@ -60,3 +60,4 @@ Funktionen:
 - in terminal öffnen -> im terminal einfach git-manager eingeben und dann öffnet es switch
 - direkt commands ausführen -> zb git-manager upload all (ohne dass man was öffnen muss)
 - so dass diese cloc commands mit eingebaut sind
+- git ignore file irgendwie managen
