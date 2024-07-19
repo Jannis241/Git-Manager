@@ -1,9 +1,10 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
 use std::collections::btree_map::Range;
+use std::env::args;
 use std::io::{self, Write}; 
 use std::fs::{self, File, OpenOptions}; 
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::process::Command;
 use colored::*; 
 use git_actions::*;
@@ -54,7 +55,7 @@ fn avoid_index_error(args: &mut Vec<&str>){
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Searching your project directory for git repositories, this may take a while...");
+    println!("Searching your project directory for git repositories, this may take a while depending on your project directory size...");
 
     let mut currentState = State::Home;
 
@@ -173,27 +174,47 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "upload" => {
                 if arguements[1] == "all" {
                     for repo in &repo_list{
-                        git_actions::update(&repo.Path);
+                        let mut force = false;
+                        for arg in &arguements{
+                            if arg == &"--force"{
+                                force = true;
+                            }
+                        }
+                        git_actions::upload(&repo.Path, &"commited by Git-Manager".to_string(), force);
                     }
                 }
 
                 else {
+                    
                     // upload a specific file
+                    // upload <file> <commit message> (--force)
+                    // upload das hier ist die 
                     if let State::Repo(ref reponame) = currentState{
-                        git_actions::upload(&reponame.to_string(), &"temp commit message".to_string());
+                        let force = git_actions::get_force(&arguements);
+                        let commit_msg = git_actions::get_commit_msg(&rawArgs, 1);
+
+                        git_actions::upload(&reponame.to_string(), &&commit_msg.to_string(), force);
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
                         if !repo_names_list.contains(&name){
                             git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
                         }
-                        if command_line::check_if_empty_and_print_info(&name, "upload all,upload <name>"){
-                            if repo_names_list.contains(&name) {
-                                git_actions::upload(&name, &"temp commit message".to_string());
+                        if command_line::check_if_empty_and_print_info(&name, "upload all,upload <name> (commit message) (--force)"){
+                            for repo in &repo_list{
+                                if &repo.Name == &name {
+                                    let force = git_actions::get_force(&arguements);
+                                    let commit_msg = git_actions::get_commit_msg(&rawArgs, 2);
+                                    git_actions::upload(&repo.Path, &commit_msg.to_string(), force);
+                                    }
+                            
+
                             }
-                            else {
+                            if !repo_names_list.contains(&name){
+
                                 command_line::throw_error("File not found");
                             }
+                            
                         }
                     }
                 }
@@ -245,22 +266,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "update" => {
                 if arguements[1] == "all" {
                     for repo in &repo_list {
-                        git_actions::update(&repo.Path);
+                        let force = git_actions::get_force(&arguements);
+                        git_actions::update(&repo.Path, force);
                     }
                 }
                 else {
                     // update a specific file
                     if let State::Repo(ref reponame) = currentState{
-                        git_actions::update(&reponame.to_string());
+                        let force = git_actions::get_force(&arguements);
+                        git_actions::update(&reponame.to_string(), force);
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
                         if !repo_names_list.contains(&name){
                             git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
                         }
-                        if command_line::check_if_empty_and_print_info(&name, "update all,update <name>"){
+                        if command_line::check_if_empty_and_print_info(&name, "update all (--force),update <name> (--force)"){
                             if repo_names_list.contains(&name) {
-                                git_actions::update(&name);
+                                let force = git_actions::get_force(&arguements);
+                                git_actions::update(&name, force);
                             }
                             else {
                                 command_line::throw_error("File not found");

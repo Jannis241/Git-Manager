@@ -53,3 +53,9 @@ Funktionen:
 - list all branches (man muss in einem project sein oder den repo namen angeben)
 - switch branches
 - pull push combi
+- save: git add und git commit
+- check status <repo name>, ist man auf dem neusten stand, sprahcen benutzt, wie viele lines es gibt, wie viele commits es gibt und alle die es bei git status auch gibt
+- show info <repo> 
+- migrate all 
+- in terminal öffnen -> im terminal einfach git-manager eingeben und dann öffnet es switch
+- direkt commands ausführen -> zb git-manager upload all (ohne dass man was öffnen muss)

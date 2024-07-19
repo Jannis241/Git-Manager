@@ -20,13 +20,16 @@ pub fn create_branch(repoName: &String, branchName: &String, api_key: &String){
     println!("the user wants to create a branch in {} with the name {} -> api key: {}", repoName, branchName, api_key);
 }
 
-pub fn upload(repoPath: &String, commitMessage: &String){
+pub fn upload(repoPath: &String, commitMessage: &String, force: bool){
     println!("the user wants to upload: {}", repoPath);
+    println!("commit msg: {}", commitMessage);
+    println!("Force: {}", force);
     
 }
 
-pub fn update(repoPath: &String){
+pub fn update(repoPath: &String, force: bool){
     println!("the user wants to update: {}", repoPath);
+    println!("force: {}", force);
 }
 
 pub fn download(repo_name: &String, username: &String, path: &str) {
@@ -226,4 +229,34 @@ pub fn update_repos(repo_list: &mut Vec<Repository>, repo_names_list: &mut Vec<S
         repo_names_list.push(repo.Name.clone());
         repo_path_list.push(repo.Path.clone());
     }
+}
+
+
+
+pub fn get_commit_msg(args: &Vec<&str>, start: usize) -> String{
+    let mut commit_msg = String::new();
+    let mut force = false;
+
+    for arg in &args[start..] {
+        if arg != &"--force"{
+            commit_msg.push_str(arg);
+            commit_msg.push_str(" ");
+        }
+    }
+    commit_msg = commit_msg.trim().to_string();
+
+    if commit_msg.len() == 0 {
+        commit_msg = "commited by Git-Manager".to_string();
+    }
+
+    commit_msg
+}
+
+pub fn get_force(args: &Vec<&str>) -> bool {
+    for arg in args{
+        if arg == &"--force"{
+            return true;
+        }
+    }
+    return false;
 }
