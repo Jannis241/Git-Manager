@@ -19,3 +19,11 @@
 
  # 6. Laden Sie die Änderungen in ~/.bashrc
  source ~/.bashrc
+
+
+# delete:
+#sudo rm /usr/local/bin/gm
+#rm ~/bin/gm
+#nano ~/.bashrc
+#export PATH="$HOME/bin:$PATH"
+#source ~/.bashrc
