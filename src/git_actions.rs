@@ -20,14 +20,14 @@ pub fn create_branch(repoName: &String, branchName: &String, api_key: &String){
     println!("the user wants to create a branch in {} with the name {} -> api key: {}", repoName, branchName, api_key);
 }
 
-pub fn upload(repoPath: &String, commitMessage: &String, force: bool){
+pub fn upload(repoPath: &String, commitMessage: &String, force: bool, branch_name: String){
     println!("the user wants to upload: {}", repoPath);
     println!("commit msg: {}", commitMessage);
     println!("Force: {}", force);
     
 }
 
-pub fn update(repoPath: &String, force: bool){
+pub fn update(repoPath: &String, force: bool, branch_name: String){
     println!("the user wants to update: {}", repoPath);
     println!("force: {}", force);
 }

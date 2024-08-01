@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
 use std::collections::btree_map::Range;
-use std::env::args;
+use std::env;
 use std::io::{self, Write}; 
 use std::fs::{self, File, OpenOptions}; 
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
-use std::process::Command;
+use std::process::{exit, Command};
 use colored::*; 
-use command_line::throw_error;
+use command_line::{check_name, throw_error};
 use git_actions::*;
 use serde::{Serialize, Deserialize};
 use reqwest::header;
@@ -46,9 +46,18 @@ fn avoid_index_error(args: &mut Vec<&str>){
         args.push(" ");
     }
 }
+fn ensure_path_exists<P: AsRef<Path>>(path: P) -> io::Result<()> {
+    let path = path.as_ref();
 
+    if !path.exists() {
+        fs::create_dir_all(path)?;
+    }
+
+    Ok(())
+}
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {    
+    exit(1);
     println!("Searching your project directory for git repositories, this may take a while depending on your project directory size...");
 
     let mut currentState = State::Home;
@@ -166,6 +175,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             "upload" => {
+                let mut branch_name = "main".to_string();
                 if arguements[1] == "all" {
                     for repo in &repo_list{
                         let mut force = false;
@@ -174,7 +184,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 force = true;
                             }
                         }
-                        git_actions::upload(&repo.Path, &"commited by Git-Manager".to_string(), force);
+                        git_actions::upload(&repo.Path, &"commited by Git-Manager".to_string(), force, "main".to_string());
                     }
                 }
 
@@ -186,20 +196,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if let State::Repo(ref reponame) = currentState{
                         let force = git_actions::get_force(&arguements);
                         let commit_msg = git_actions::get_commit_msg(&rawArgs, 1);
-
-                        git_actions::upload(&reponame.to_string(), &&commit_msg.to_string(), force);
+                        if arguements[1] != " "{
+                            branch_name = rawArgs[1].to_string();
+                        }
+                        git_actions::upload(&reponame.to_string(), &&commit_msg.to_string(), force, branch_name);
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
                         if !repo_names_list.contains(&name){
                             git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
                         }
-                        if command_line::check_if_empty_and_print_info(&name, "upload all,upload <name> (commit message) (--force)"){
+                        if command_line::check_if_empty_and_print_info(&name, "upload all,upload <name> (commit message) (branch name) (--force)"){
                             for repo in &repo_list{
                                 if &repo.Name == &name {
                                     let force = git_actions::get_force(&arguements);
                                     let commit_msg = git_actions::get_commit_msg(&rawArgs, 2);
-                                    git_actions::upload(&repo.Path, &commit_msg.to_string(), force);
+                                    if arguements[2] != " "{
+                                        branch_name = rawArgs[2].to_string();
+                                    }
+                                    git_actions::upload(&repo.Path, &commit_msg.to_string(), force, "main".to_string());
                                     }
                             
 
@@ -215,24 +230,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             "download" => {
-
-                if command_line::check_if_empty_and_print_info(&arguements[1].to_string(), "download all from <user>,download <repo> from <user>"){
+                let mut path = user_config.project_path.clone();
+                if arguements[4] != " "{
+                    path = rawArgs[4].to_string();
+                } 
+                if command_line::check_if_empty_and_print_info(&arguements[1].to_string(), "download all from <user> (to path),download <repo> from <user> (to path)"){
                     if arguements[1] == "all"{
                         if arguements[2] == "from" {
                             let username = rawArgs[3];
                             if command_line::check_name(&username.to_string(), "Username is missing"){
-                                if username == user_config.username {
                                     // download own repos so also privat repos
                                     if username == &user_config.username {
                                         // from own acc so also private repos
                                         let api_key = Some(user_config.api_key.as_str());
-                                        git_actions::clone_all_repos(username, api_key, &user_config.project_path).await?;
+                                        git_actions::clone_all_repos(username, api_key, &path).await?;
                                     }
                                     else {
                                         let api_key = None;
-                                        git_actions::clone_all_repos(username, api_key, &user_config.project_path).await?;
+                                        git_actions::clone_all_repos(username, api_key, &path).await?;
                                     }  
-                                }
+                                
                             }
                         }
                         else {
@@ -246,7 +263,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             if arguements[2] == "from" {
                                 let username = rawArgs[3];
                                 if command_line::check_name(&username.to_string(), "Username is missing"){
-                                    git_actions::download(&repoName.to_string(), &username.to_string(), &user_config.project_path)
+                                    git_actions::download(&repoName.to_string(), &username.to_string(), &path)
                                 }
                             }
                             else{
@@ -261,24 +278,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if arguements[1] == "all" {
                     for repo in &repo_list {
                         let force = git_actions::get_force(&arguements);
-                        git_actions::update(&repo.Path, force);
+                        git_actions::update(&repo.Path, force, "main".to_string());
                     }
                 }
                 else {
                     // update a specific file
                     if let State::Repo(ref reponame) = currentState{
                         let force = git_actions::get_force(&arguements);
-                        git_actions::update(&reponame.to_string(), force);
+                        let path = find_file_in_path(&user_config.project_path, &reponame);
+                        let mut branch_name = "main".to_string();
+                        if arguements[1] != " "{
+                            branch_name = rawArgs[1].to_string();
+                        }
+                        match path{
+                            Ok(path) => git_actions::update(&path, force, branch_name),
+                            Err(error) => println!("error while updating: {:?}", error),
+                        }
                     }
                     else {
                         let name = rawArgs[1].to_string().clone();
                         if !repo_names_list.contains(&name){
                             git_actions::update_repos(&mut repo_list, &mut repo_names_list, &mut repo_path_list, &user_config);
                         }
-                        if command_line::check_if_empty_and_print_info(&name, "update all (--force),update <name> (--force)"){
+                        if command_line::check_if_empty_and_print_info(&name, "update all (--force),update <name> (--force) (branch name)"){
                             if repo_names_list.contains(&name) {
                                 let force = git_actions::get_force(&arguements);
-                                git_actions::update(&name, force);
+                                
+                                let path = find_file_in_path(&user_config.project_path, &name);
+                                let mut branch_name = "main".to_string();
+                                if arguements[1] != " "{
+                                    branch_name = rawArgs[1].to_string();
+                                }
+                                match path{
+                                    Ok(path) => git_actions::update(&path, force, branch_name),
+                                    Err(error) => println!("error while updating: {:?}", error),
+                                }
                             }
                             else {
                                 command_line::throw_error("File not found");
@@ -376,7 +410,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     message = "create branch <name>"
                 }
                 else {
-                    message = "create repo <name>,create branch <name> in <repo>"
+                    message = "create repo <name> (to path),create branch <name> in <repo>"
                 }
                 
                 if command_line::check_if_empty_and_print_info(&arguements[1].to_string(), &message){
@@ -402,20 +436,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     else if arguements[1] == "repo" {
                         if command_line::check_name(&name, "Repository name is missing"){
-                            // create repo <name> <public / private> 
+                            // create repo <name> <public / private> (path) -> opt
                             let name = rawArgs[2];
                             let mut privacystr = arguements[3];
-                            let mut privacy = true;
-                            match privacystr {
-                                "public" => {
-                                    create_repo(&name.to_string(), &true, &user_config.project_path, &user_config.api_key)
-                                } 
-                                "private" => {
-                                    create_repo(&name.to_string(), &false, &user_config.project_path, &user_config.api_key)
+                            let mut path = user_config.project_path.clone();
+
+                            if arguements[4] != " "{
+                                path = rawArgs[4].to_string();
+                            }
+
+                            if let Err(msg) = ensure_path_exists(&path){
+                                panic!("Error while creating path");
+                            }
+
+                            if repo_names_list.contains(&name.to_string()){
+                                throw_error(format!("Repository '{}' already exists", name).as_str());
+                            }
+                            else {
+                                let mut privacy = true;
+                                if check_name(&privacystr.to_string(), "Privacy is missing (public, private)"){
+                                    match privacystr {
+                                        "public" => {
+                                            create_repo(&name.to_string(), &true, &path.to_string(), &user_config.api_key)
+                                        } 
+                                        "private" => {
+                                            create_repo(&name.to_string(), &false, &path.to_string(), &user_config.api_key)
+                                        }
+                                        other => {
+                                            command_line::throw_error(format!("Privacy arguement '{}' is invalid (public/private)", other).as_str());
+                                        }
+                                    }
+
                                 }
-                                other => {
-                                    command_line::throw_error(format!("Privacy arguement '{}' is invalid (public/private)", privacy).as_str());
-                                }
+
                             }
 
                         }       

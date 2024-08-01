@@ -1,30 +1,20 @@
 create:
-- wo auf dem pc soll das repo gespeichert werden als
-extra parameter (default ist der project path)
-- angeben ob es public oder private sein soll
-- guckenn ob es das reop / den branch schon gibt
+- guckenn ob es den branch schon gibt
 - gucken ob man der owner des repos ist falls ein branch erstellt werden soll
 
 upload:
-- force (all und einzelnd)
-- commit message
 - branche (default ist main)
 - zu der upload function muss der path des ordners mit
 dem repository angegeben werden
 - gucken falls ein file nicht gefunden wird ob vielleicht
 nur die groß und klein schreibung falsch ist, alles auf
 lowercase setzten
+- branch name fixxen -> gucken wo die commit msg aufhört und --force ignorieren
 
 update:
-- force
 - branch name (default ist main)
-- path muss angegeben werden
-- groß und klein schreibung checken
-
-download:
-- optionaler parameter "path" -> bestimmen wohin es klont werden
-soll
-
+- branch name fixxen -> gucken wo die commit msg aufhört und --force ignorieren
+- branch name fixxen -> gucken wo die commit msg aufhört und --force ignorieren
 
 delete:
 - delete folder from pc
@@ -37,8 +27,6 @@ directory man auch ist
 - bestätigungs nachricht falls es gelöscht wurde
 
 migrate:
-- privacy
-- path soll gleich bleiben 
 - git init 
 
 Allgemein:
